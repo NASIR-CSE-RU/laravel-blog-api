@@ -7,6 +7,15 @@ if [ ! -f .env ]; then
   cp .env.example .env
 fi
 
+if [ ! -f vendor/autoload.php ]; then
+  composer install \
+    --prefer-dist \
+    --no-interaction \
+    --optimize-autoloader \
+    --ignore-platform-reqs \
+    --no-scripts
+fi
+
 if ! grep -Eq '^APP_KEY=.+$' .env; then
   php artisan key:generate --force
 fi
