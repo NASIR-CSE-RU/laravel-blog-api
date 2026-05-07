@@ -24,7 +24,7 @@ class StorePostRequest extends FormRequest
     {
         return [
             'content' => ['required', 'string'],
-            'image_url' => ['nullable', 'string', 'max:2048'],
+            'image' => ['nullable', 'file', 'image', 'max:5120'],
             'visibility' => ['required', 'string', Rule::in(['public', 'private'])],
         ];
     }

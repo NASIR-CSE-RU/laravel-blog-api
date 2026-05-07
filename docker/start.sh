@@ -45,5 +45,6 @@ while true; do
 done
 
 php artisan app:passport-init
+php artisan storage:link --force >/dev/null 2>&1 || true
 
 exec php artisan serve --host=0.0.0.0 --port=8000
