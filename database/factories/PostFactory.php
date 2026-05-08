@@ -32,4 +32,18 @@ class PostFactory extends Factory
             'visibility' => fake()->randomElement(['public', 'private']),
         ];
     }
+
+    public function publicVisibility(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'visibility' => 'public',
+        ]);
+    }
+
+    public function privateVisibility(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'visibility' => 'private',
+        ]);
+    }
 }

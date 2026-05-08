@@ -9,6 +9,10 @@ use Throwable;
 
 class FeedService
 {
+    private const COMMENT_PREVIEW_LIMIT = 3;
+
+    private const REPLY_PREVIEW_LIMIT = 3;
+
     /**
      * Get the feed posts for the authenticated user.
      *
@@ -19,6 +23,21 @@ class FeedService
         try {
             return Post::query()
                 ->with('user')
+                ->withCount([
+                    'topLevelComments as comments_count',
+                ])
+                ->with([
+                    'topLevelComments' => fn ($query) => $query
+                        ->with('user')
+                        ->withCount('replies')
+                        ->with([
+                            'replies' => fn ($replyQuery) => $replyQuery
+                                ->with('user')
+                                ->limit(self::REPLY_PREVIEW_LIMIT),
+                        ])
+                        ->orderByDesc('created_at')
+                        ->limit(self::COMMENT_PREVIEW_LIMIT),
+                ])
                 ->where(function ($query) use ($userId): void {
                     $query->where('visibility', 'public')
                         ->orWhere('user_id', $userId);

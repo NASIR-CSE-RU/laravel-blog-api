@@ -5,8 +5,8 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** @mixin \App\Models\Post */
-class PostResource extends JsonResource
+/** @mixin \App\Models\Comment */
+class CommentResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -15,14 +15,14 @@ class PostResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'post_id' => $this->post_id,
+            'parent_id' => $this->parent_id,
             'content' => $this->content,
-            'image_url' => $this->image_url,
-            'visibility' => $this->visibility,
-            'comments_count' => $this->when(isset($this->comments_count), $this->comments_count),
+            'replies_count' => $this->whenCounted('replies'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'user' => new UserResource($this->whenLoaded('user')),
-            'comments' => CommentResource::collection($this->whenLoaded('topLevelComments')),
+            'replies' => CommentResource::collection($this->whenLoaded('replies')),
         ];
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\PostController;
 use Illuminate\Http\Request;
@@ -13,6 +14,8 @@ Route::get('/user', function (Request $request) {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/posts', [PostController::class, 'store'])->middleware('auth:api');
+Route::get('/posts/{post}/comments', [CommentController::class, 'index'])->middleware('auth:api');
+Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->middleware('auth:api');
 Route::get('/feeds', [FeedController::class, 'index'])->middleware('auth:api');
 
 Route::get('/test', function () {

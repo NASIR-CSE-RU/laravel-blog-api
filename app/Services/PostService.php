@@ -35,7 +35,7 @@ class PostService
                     'user_id' => $userId,
                 ]);
 
-                return $post->load('user');
+                return $post->load('user')->loadCount('comments');
             });
         } catch (Throwable $exception) {
             if ($storedImagePath !== null) {
