@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\ApiException;
 use App\Models\Comment;
 use App\Models\Post;
+use App\Models\Reaction;
 use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
@@ -21,11 +22,21 @@ class CommentService
             return $post->comments()
                 ->whereNull('parent_id')
                 ->with('user')
-                ->withCount('replies')
+                ->withCount(['replies', 'reactions'])
+                ->withExists([
+                    'reactions as viewer_has_liked' => fn ($query) => $query
+                        ->where('user_id', $userId)
+                        ->where('type', Reaction::TYPE_LIKE),
+                ])
                 ->with([
                     'replies' => fn ($query) => $query
                         ->with('user')
-                        ->withCount('replies'),
+                        ->withCount(['replies', 'reactions'])
+                        ->withExists([
+                            'reactions as viewer_has_liked' => fn ($reactionQuery) => $reactionQuery
+                                ->where('user_id', $userId)
+                                ->where('type', Reaction::TYPE_LIKE),
+                        ]),
                 ])
                 ->orderBy('created_at')
                 ->get();
@@ -68,7 +79,13 @@ class CommentService
                 'parent_id' => $parentId,
             ]);
 
-            return $comment->load('user')->loadCount('replies');
+            return $comment->load('user')
+                ->loadCount(['replies', 'reactions'])
+                ->loadExists([
+                    'reactions as viewer_has_liked' => fn ($query) => $query
+                        ->where('user_id', $userId)
+                        ->where('type', Reaction::TYPE_LIKE),
+                ]);
         } catch (ApiException $exception) {
             throw $exception;
         } catch (Throwable $exception) {

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\ApiException;
 use App\Models\Post;
+use App\Models\Reaction;
 use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
@@ -25,14 +26,34 @@ class FeedService
                 ->with('user')
                 ->withCount([
                     'topLevelComments as comments_count',
+                    'reactions',
+                ])
+                ->withExists([
+                    'reactions as viewer_has_liked' => fn ($query) => $query
+                        ->where('user_id', $userId)
+                        ->where('type', Reaction::TYPE_LIKE),
                 ])
                 ->with([
+                    'reactions' => fn ($query) => $query
+                        ->with(['user:id,first_name,last_name'])
+                        ->orderByDesc('created_at'),
                     'topLevelComments' => fn ($query) => $query
                         ->with('user')
-                        ->withCount('replies')
+                        ->withCount(['replies', 'reactions'])
+                        ->withExists([
+                            'reactions as viewer_has_liked' => fn ($reactionQuery) => $reactionQuery
+                                ->where('user_id', $userId)
+                                ->where('type', Reaction::TYPE_LIKE),
+                        ])
                         ->with([
                             'replies' => fn ($replyQuery) => $replyQuery
                                 ->with('user')
+                                ->withCount('reactions')
+                                ->withExists([
+                                    'reactions as viewer_has_liked' => fn ($reactionQuery) => $reactionQuery
+                                        ->where('user_id', $userId)
+                                        ->where('type', Reaction::TYPE_LIKE),
+                                ])
                                 ->limit(self::REPLY_PREVIEW_LIMIT),
                         ])
                         ->orderByDesc('created_at')
