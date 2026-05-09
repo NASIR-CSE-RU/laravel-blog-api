@@ -14,6 +14,28 @@ class FeedApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_feed_is_paginated(): void
+    {
+        $viewer = User::factory()->create();
+        Post::factory()->count(12)->publicVisibility()->create();
+
+        Passport::actingAs($viewer);
+
+        $response = $this->getJson('/api/feeds?per_page=5&page=2');
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('message', 'Feed fetched successfully')
+            ->assertJsonCount(5, 'data')
+            ->assertJsonPath('meta.pagination.total', 12)
+            ->assertJsonPath('meta.pagination.count', 5)
+            ->assertJsonPath('meta.pagination.per_page', 5)
+            ->assertJsonPath('meta.pagination.current_page', 2)
+            ->assertJsonPath('meta.pagination.total_pages', 3)
+            ->assertJsonPath('meta.pagination.has_more_pages', true);
+    }
+
     public function test_feed_includes_reaction_counts_and_like_state(): void
     {
         $viewer = User::factory()->create();

@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Exceptions\ApiException;
 use App\Models\Post;
 use App\Models\Reaction;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Throwable;
 
 class FeedService
@@ -17,9 +17,9 @@ class FeedService
     /**
      * Get the feed posts for the authenticated user.
      *
-     * @return Collection<int, Post>
+     * @return LengthAwarePaginator<int, Post>
      */
-    public function getForUser(int $userId): Collection
+    public function getForUser(int $userId, int $perPage = 10): LengthAwarePaginator
     {
         try {
             return Post::query()
@@ -64,7 +64,7 @@ class FeedService
                         ->orWhere('user_id', $userId);
                 })
                 ->orderByDesc('created_at')
-                ->get();
+                ->paginate($perPage);
         } catch (Throwable $exception) {
             throw new ApiException(
                 message: 'Failed to fetch feed',

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Feed\PaginateFeedsRequest;
 use App\Http\Resources\PostResource;
 use App\Services\FeedService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class FeedController extends Controller
 {
@@ -17,13 +17,23 @@ class FeedController extends Controller
     ) {
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(PaginateFeedsRequest $request): JsonResponse
     {
-        $posts = $this->feedService->getForUser($request->user()->id);
+        $posts = $this->feedService->getForUser($request->user()->id, $request->perPage());
 
         return $this->successResponse(
-            data: PostResource::collection($posts),
-            message: 'Feed fetched successfully'
+            data: PostResource::collection($posts->getCollection()),
+            message: 'Feed fetched successfully',
+            meta: [
+                'pagination' => [
+                    'total' => $posts->total(),
+                    'count' => $posts->count(),
+                    'per_page' => $posts->perPage(),
+                    'current_page' => $posts->currentPage(),
+                    'total_pages' => $posts->lastPage(),
+                    'has_more_pages' => $posts->hasMorePages(),
+                ],
+            ]
         );
     }
 }
